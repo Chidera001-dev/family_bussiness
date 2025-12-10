@@ -29,6 +29,11 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
+# Paystack API Keys
+PAYSTACK_PUBLIC_KEY = config("PAYSTACK_PUBLIC_KEY")
+PAYSTACK_SECRET_KEY = config("PAYSTACK_SECRET_KEY")
+
+
 ALLOWED_HOSTS = []
 
 

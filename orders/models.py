@@ -51,7 +51,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Optional: store payment reference from gateway
+    
     payment_reference = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
