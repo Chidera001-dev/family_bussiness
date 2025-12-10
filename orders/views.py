@@ -23,28 +23,34 @@ from .utils import (
     calculate_order_total
 )
 
+# Import Celery task
+from .tasks import send_order_email
+
 
 class CreateOrderView(APIView):
     """
-    Create a new order and assign a Paystack reference.
+    Saves user info when they fill the form on the first page.
+    Generates a unique Paystack reference for payment.
     """
     def post(self, request):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
+            # Save the order
             order = serializer.save()
-
-            # Assign unique Paystack reference
+            
+            # Assign a unique reference for Paystack
             order.reference = create_paystack_reference()
             order.save()
 
+            # Return the order info to frontend
             return Response({
-                "message": "Order created successfully",
+                "message": "Order saved successfully",
                 "order_id": order.id,
-                "order_reference": order.reference,
-                "order": OrderSerializer(order).data
+                "order_reference": order.reference
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class OrderStatusView(RetrieveAPIView):
@@ -126,9 +132,17 @@ class PaystackWebhookView(APIView):
             order.order_status = "processing"
             order.save()
 
+            # Send payment confirmation email asynchronously
+            subject = "BreezeCharge: Payment Successful"
+            message = f"Hi {order.full_name},\n\n" \
+                      f"We have received your payment for order {order.id}.\n" \
+                      f"Your order will now be processed for shipping."
+            send_order_email.delay(subject, message, [order.email])
+
             return Response({"message": "Payment verified"}, status=200)
 
         return Response({"message": "Event ignored"}, status=200)
+
 
 
 
